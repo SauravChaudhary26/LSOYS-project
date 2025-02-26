@@ -41,7 +41,7 @@ const Login = () => {
 
       setLoading(true);
       try {
-         const url = "http://localhost:8080/auth/login";
+         const url = "https://lsoys-project.onrender.com/auth/login";
          const response = await axios.post(url, formData);
 
          if (!response.data.token) {
@@ -70,7 +70,7 @@ const Login = () => {
    };
 
    return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-950 text-white p-4">
+      <div className="flex justify-center flex-col items-center min-h-screen bg-gray-950 text-white p-4">
          <div className="bg-gray-900 p-8 rounded-2xl shadow-lg w-full max-w-md border border-gray-700">
             <h2 className="text-3xl font-bold mb-6 text-center">Login</h2>
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -152,6 +152,11 @@ const Login = () => {
                </Typography>
             </div>
          </div>
+         <Typography className="text-gray-400 mt-7 ml-4">
+            *Render.com free servers are very slow, so backend takes around 30
+            seconds to process the first request at the worst. Any subsequent
+            requests are faster. Thank you for your patience.
+         </Typography>
          <ToastContainer />
       </div>
    );

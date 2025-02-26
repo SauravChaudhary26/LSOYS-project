@@ -1,3 +1,5 @@
+## Live link :- https://lsoys-project.netlify.app/
+
 # Job Portal assignment for LSOYS Games & Apps
 
 A full-stack job portal built using the MERN stack (MongoDB, Express, React, Node.js) with role-based authentication and job recommendations. The site allows two types of users—**Students** and **Recruiters**—to sign up, log in, and access different functionalities based on their roles. Students can search and apply for jobs, save job listings, and receive recommendations based on their application history, while Recruiters can post new job openings and manage applications.

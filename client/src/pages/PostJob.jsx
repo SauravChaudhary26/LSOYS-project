@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
 
 const PostJob = () => {
    const navigate = useNavigate();
@@ -70,10 +71,11 @@ const PostJob = () => {
 
       try {
          const response = await axios.post(
-            "http://localhost:8080/recruiter/create",
+            "https://lsoys-project.onrender.com/recruiter/create",
             payload
          );
          console.log("Job created:", response.data);
+         toast.success("Job posted successfully!");
          // Clear the form after successful submission
          setJobData({
             title: "",
@@ -102,7 +104,7 @@ const PostJob = () => {
                </Typography>
                <Button
                   color="inherit"
-                  onClick={() => navigate("/manage-applications")}
+                  onClick={() => navigate("/applications")}
                   sx={{ mr: 2 }}
                >
                   Manage Applications
@@ -223,6 +225,7 @@ const PostJob = () => {
                </form>
             </Paper>
          </Container>
+         <ToastContainer />
       </Box>
    );
 };

@@ -16,6 +16,7 @@ import {
    DialogTitle,
    DialogContent,
    DialogActions,
+   Box,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
@@ -23,8 +24,9 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 
 const StudentDashboard = () => {
-   // Jobs state is now populated from the API call
+   // State for jobs and student's applied job IDs
    const [jobs, setJobs] = useState([]);
+   const [appliedJobIds, setAppliedJobIds] = useState([]);
    const [searchQuery, setSearchQuery] = useState("");
    const [filterOpen, setFilterOpen] = useState(false);
    const [applyDialogOpen, setApplyDialogOpen] = useState(false);
@@ -33,45 +35,69 @@ const StudentDashboard = () => {
       minSalary: "",
       tag: "",
    });
-   const [userPreferences, setUserPreferences] = useState([]); // User's preferences array
+   const [userPreferences, setUserPreferences] = useState([]); // For recommendations if needed
 
-   // Fetch jobs from backend API when the component mounts
+   // Assume userId is stored in localStorage after login
+   const userId = localStorage.getItem("userId");
+
+   // Fetch all jobs from backend API when the component mounts
    useEffect(() => {
       const fetchJobs = async () => {
          try {
             const response = await axios.get(
-               "http://localhost:8080/student/jobs"
+               "https://lsoys-project.onrender.com/student/jobs"
             );
-            // Assuming the API returns an array of jobs
             setJobs(response.data);
          } catch (error) {
             console.error("Error fetching jobs:", error);
          }
       };
-      fetchJobs();
-   }, []);
 
-   // Filter jobs based on search query and filter criteria
-   const filteredJobs = jobs.filter((job) => {
-      const matchesSearch =
-         job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-         job.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-         job.tags.some((tag) =>
-            tag.toLowerCase().includes(searchQuery.toLowerCase())
-         );
-      let matchesFilter = true;
-      if (filterCriteria.minSalary) {
-         matchesFilter = job.salary >= Number(filterCriteria.minSalary);
-      }
-      if (filterCriteria.tag) {
-         matchesFilter =
-            matchesFilter &&
-            job.tags.some(
-               (tag) => tag.toLowerCase() === filterCriteria.tag.toLowerCase()
+      const fetchAppliedJobs = async () => {
+         try {
+            const response = await axios.get(
+               `https://lsoys-project.onrender.com/student/applications?userId=${userId}`
             );
+            // Assuming each application is populated with job details
+            const appliedIds = response.data.map(
+               (application) => application.job?._id
+            );
+            setAppliedJobIds(appliedIds);
+         } catch (error) {
+            console.error("Error fetching applied jobs:", error);
+         }
+      };
+
+      if (userId) {
+         fetchJobs();
+         fetchAppliedJobs();
       }
-      return matchesSearch && matchesFilter;
-   });
+   }, [userId]);
+
+   // Filter jobs based on search query, filter criteria, and remove applied jobs
+   const filteredJobs = jobs
+      .filter((job) => !appliedJobIds.includes(job._id)) // filter out applied jobs
+      .filter((job) => {
+         const matchesSearch =
+            job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            job.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            job.tags.some((tag) =>
+               tag.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+         let matchesFilter = true;
+         if (filterCriteria.minSalary) {
+            matchesFilter = job.salary >= Number(filterCriteria.minSalary);
+         }
+         if (filterCriteria.tag) {
+            matchesFilter =
+               matchesFilter &&
+               job.tags.some(
+                  (tag) =>
+                     tag.toLowerCase() === filterCriteria.tag.toLowerCase()
+               );
+         }
+         return matchesSearch && matchesFilter;
+      });
 
    // When the "Apply" button is clicked, open the confirmation dialog
    const handleApplyClick = (job) => {
@@ -79,7 +105,7 @@ const StudentDashboard = () => {
       setApplyDialogOpen(true);
    };
 
-   // Handle save button click for a job (simulation)
+   // Handle save button click (simulation)
    const handleSaveClick = (job) => {
       console.log("Saved job:", job.title);
    };
@@ -87,13 +113,9 @@ const StudentDashboard = () => {
    const confirmApplication = async () => {
       if (selectedJob) {
          try {
-            // Assume you store the logged-in user's ID in localStorage
-            const userId = localStorage.getItem("userId");
-            console.log("Applying as user:", userId);
-
             // Send the API request to update appliedJobs and recommendations
             const response = await axios.put(
-               "http://localhost:8080/student/apply",
+               "https://lsoys-project.onrender.com/student/apply",
                {
                   userId,
                   jobId: selectedJob._id,
@@ -101,13 +123,19 @@ const StudentDashboard = () => {
                }
             );
             console.log("Application updated:", response.data);
-            // Optionally, remove the applied job from the dashboard view
+            // Optionally update appliedJobIds to remove this job from dashboard view
+            setAppliedJobIds((prev) => [...prev, selectedJob._id]);
          } catch (error) {
             console.error("Error applying for job:", error);
          }
       }
       setApplyDialogOpen(false);
       setSelectedJob(null);
+   };
+
+   const handleLogout = () => {
+      localStorage.clear();
+      navigate("/");
    };
 
    return (
@@ -118,7 +146,11 @@ const StudentDashboard = () => {
                <Typography variant="h6" sx={{ flexGrow: 1 }}>
                   Student Dashboard
                </Typography>
-               <Button color="inherit" component={Link} to="/applications">
+               <Button
+                  color="inherit"
+                  component={Link}
+                  to="/student-applications"
+               >
                   Manage Applications
                </Button>
                <Button color="inherit" component={Link} to="/saved-jobs">
@@ -126,6 +158,9 @@ const StudentDashboard = () => {
                </Button>
                <Button color="inherit" component={Link} to="/recommendations">
                   Recommendations
+               </Button>
+               <Button color="inherit" onClick={handleLogout}>
+                  Logout
                </Button>
             </Toolbar>
          </AppBar>
@@ -161,53 +196,86 @@ const StudentDashboard = () => {
             <Grid container spacing={2}>
                {filteredJobs.map((job) => (
                   <Grid item xs={12} sm={6} md={4} key={job._id}>
-                     <Card variant="outlined">
-                        <CardContent>
-                           <Typography variant="h6">{job.title}</Typography>
-                           <Typography variant="body2" color="text.secondary">
+                     <Card
+                        variant="outlined"
+                        sx={{
+                           height: 250,
+                           overflow: "hidden",
+                           display: "flex",
+                           flexDirection: "column",
+                           borderRadius: "12px",
+                           p: 1,
+                        }}
+                     >
+                        <CardContent sx={{ flexGrow: 1, p: 1 }}>
+                           <Typography
+                              variant="h6"
+                              sx={{
+                                 whiteSpace: "nowrap",
+                                 overflow: "hidden",
+                                 textOverflow: "ellipsis",
+                              }}
+                           >
+                              {job.title}
+                           </Typography>
+                           <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{
+                                 whiteSpace: "nowrap",
+                                 overflow: "hidden",
+                                 textOverflow: "ellipsis",
+                              }}
+                           >
                               {job.companyName}
                            </Typography>
-                           <Typography variant="body2" color="text.secondary">
+                           <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{
+                                 whiteSpace: "nowrap",
+                                 overflow: "hidden",
+                                 textOverflow: "ellipsis",
+                              }}
+                           >
                               Eligibility: {job.eligibility}
                            </Typography>
                            <Typography variant="body2" color="text.secondary">
                               Salary: ${job.salary}
                            </Typography>
-                           <div style={{ marginTop: 8 }}>
+                           <Box sx={{ mt: 1 }}>
                               {job.tags.map((tag, index) => (
                                  <Chip
                                     key={index}
                                     label={tag}
                                     size="small"
-                                    sx={{ marginRight: 0.5, marginBottom: 0.5 }}
+                                    sx={{ mr: 0.5, mb: 0.5 }}
                                  />
                               ))}
-                           </div>
-                           <Grid
-                              container
-                              spacing={1}
-                              alignItems="center"
-                              sx={{ marginTop: 2 }}
-                           >
-                              <Grid item xs={8}>
-                                 <Button
-                                    variant="contained"
-                                    color="primary"
-                                    size="small"
-                                    onClick={() => handleApplyClick(job)}
-                                 >
-                                    Apply
-                                 </Button>
-                              </Grid>
-                              <Grid item xs={4}>
-                                 <IconButton
-                                    onClick={() => handleSaveClick(job)}
-                                 >
-                                    <BookmarkBorderIcon />
-                                 </IconButton>
-                              </Grid>
-                           </Grid>
+                           </Box>
                         </CardContent>
+                        <Grid
+                           container
+                           spacing={1}
+                           alignItems="center"
+                           sx={{ p: 1 }}
+                        >
+                           <Grid item xs={8}>
+                              <Button
+                                 variant="contained"
+                                 color="primary"
+                                 size="small"
+                                 onClick={() => handleApplyClick(job)}
+                              >
+                                 Apply
+                              </Button>
+                           </Grid>
+                           <Grid item xs={4}>
+                              <IconButton onClick={() => handleSaveClick(job)}>
+                                 <BookmarkBorderIcon />
+                              </IconButton>
+                           </Grid>
+                        </Grid>
                      </Card>
                   </Grid>
                ))}
@@ -227,7 +295,7 @@ const StudentDashboard = () => {
                <Typography
                   variant="body2"
                   color="text.secondary"
-                  sx={{ marginTop: 1 }}
+                  sx={{ mt: 1 }}
                >
                   You can withdraw your application within 24 hours.
                </Typography>

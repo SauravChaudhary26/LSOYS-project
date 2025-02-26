@@ -5,7 +5,6 @@ const Recruiter = require("../models/Recruiter");
 
 const signup = async (req, res) => {
    const { name, email, password, role } = req.body;
-   console.log("Signup request received:", req.body);
 
    try {
       // Check if the user already exists in the appropriate collection

@@ -1,4 +1,5 @@
 const Job = require("../models/Job");
+const Recruiter = require("../models/Recruiter");
 
 const getJobs = async (req, res) => {
    try {
@@ -10,7 +11,6 @@ const getJobs = async (req, res) => {
    }
 };
 
-// Existing createJob function (for posting new job openings)
 const createJob = async (req, res) => {
    try {
       const { title, companyName, eligibility, salary, tags, recruiterId } =
@@ -36,7 +36,13 @@ const createJob = async (req, res) => {
       });
       await job.save();
 
-      // Optionally update the recruiter’s postedJobs array here if needed
+      // Update the recruiter's postedJobs array with the new job's _id
+      await Recruiter.findByIdAndUpdate(
+         recruiterId,
+         { $push: { postedJobs: job._id } },
+         { new: true }
+      );
+
       res.status(201).json({ message: "Job created successfully", job });
    } catch (error) {
       console.error("Error creating job:", error);
