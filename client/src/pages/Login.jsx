@@ -41,7 +41,8 @@ const Login = () => {
 
       setLoading(true);
       try {
-         const response = await axios.post("/api/auth/login", formData);
+         const url = "http://localhost:8080/auth/login";
+         const response = await axios.post(url, formData);
 
          if (!response.data.token) {
             toast.error("Login failed");
@@ -51,6 +52,7 @@ const Login = () => {
          toast.success("Signup successful!");
          localStorage.setItem("token", response.data.token);
          localStorage.setItem("userRole", response.data.user.role);
+         localStorage.setItem("userId", response.data.user._id);
          console.log(response.data);
 
          if (response.data.user.role === "student") {

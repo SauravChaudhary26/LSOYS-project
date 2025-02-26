@@ -53,7 +53,10 @@ const Signup = () => {
 
       setLoading(true);
       try {
-         const response = await axios.post("/api/auth/signup", formData);
+         const response = await axios.post(
+            "http://localhost:8080/auth/signup",
+            formData
+         );
 
          if (!response || !response.data.token) {
             toast.error("Signup failed");
@@ -63,6 +66,7 @@ const Signup = () => {
          toast.success("Signup successful!");
          localStorage.setItem("token", response.data.token);
          localStorage.setItem("userRole", response.data.user.role);
+         localStorage.setItem("userId", response.data.user._id);
          console.log(response.data);
 
          if (response.data.user.role === "student") {

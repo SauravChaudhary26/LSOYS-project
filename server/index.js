@@ -6,7 +6,9 @@ require("dotenv").config();
 
 // Import routers
 const AuthRouter = require("./routes/authRouter");
+const UserRouter = require("./routes/userRouter");
 const MainRouter = require("./routes/mainRouter");
+const recruiterRouter = require("./routes/recruiterRouter");
 
 // Supress deprecation warnings
 process.noDeprecation = true;
@@ -28,6 +30,8 @@ app.use(bodyParser.json());
 
 // Define routes
 app.use("/", MainRouter);
+app.use("/student", UserRouter);
+app.use("/recruiter", recruiterRouter);
 app.use("/auth", AuthRouter);
 
 // Start the server

@@ -1,3 +1,4 @@
+// models/User.js
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
@@ -9,7 +10,7 @@ const userSchema = new mongoose.Schema(
       // Fields specific to students
       appliedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Job" }],
       savedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Job" }],
-      recommendations: [{ type: mongoose.Schema.Types.ObjectId, ref: "Job" }],
+      recommendations: [String], // Modified to store job tags as strings
    },
    { timestamps: true }
 );
